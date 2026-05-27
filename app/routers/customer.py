@@ -7,6 +7,7 @@ from app.models.user import User, UserRole
 from app.models.restaurant import Restaurant
 from app.models.food_item import FoodItem
 from app.models.order import Order
+from app.models.delivery_location import DeliveryLocation
 from app.schemas.restaurant import RestaurantResponse
 from app.schemas.food_item import FoodItemResponse
 from app.schemas.order import OrderCreate
@@ -93,6 +94,37 @@ def get_order_history(
         Order.customer_id == current_user.id
     ).order_by(Order.created_at.desc()).all()
     return [format_order_response(order) for order in orders]
+
+
+@router.get("/orders/{order_id}/delivery-location")
+def get_order_delivery_location(
+    order_id: int,
+    current_user: User = Depends(require_role(["customer"])),
+    db: Session = Depends(get_db),
+):
+    """Get assigned delivery staff location for a customer's order."""
+    order = db.query(Order).filter(
+        Order.id == order_id,
+        Order.customer_id == current_user.id,
+    ).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if not order.delivery_staff_id:
+        raise HTTPException(status_code=404, detail="Delivery staff not assigned yet")
+
+    location = db.query(DeliveryLocation).filter(
+        DeliveryLocation.staff_id == order.delivery_staff_id,
+    ).first()
+    if not location:
+        raise HTTPException(status_code=404, detail="Delivery staff location not available yet")
+
+    return {
+        "order_id": order.id,
+        "staff_id": order.delivery_staff_id,
+        "latitude": location.latitude,
+        "longitude": location.longitude,
+        "updated_at": location.updated_at,
+    }
 
 
 @router.get("/orders/{order_id}")

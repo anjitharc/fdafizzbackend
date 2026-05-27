@@ -51,6 +51,9 @@ class OrderResponse(BaseModel):
     customer_name: Optional[str] = None
     restaurant_name: Optional[str] = None
     delivery_staff_name: Optional[str] = None
+    delivery_staff_latitude: Optional[float] = None
+    delivery_staff_longitude: Optional[float] = None
+    delivery_staff_location_updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

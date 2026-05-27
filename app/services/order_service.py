@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.models.order import Order, OrderItem, OrderStatus
+from app.models.delivery_location import DeliveryLocation
 from app.models.food_item import FoodItem
 from app.schemas.order import OrderCreate, OrderResponse, OrderItemResponse
 from fastapi import HTTPException, status
@@ -73,6 +74,8 @@ def format_order_response(order: Order) -> dict:
             "food_item_name": food_item_name,
         })
 
+    delivery_location = order.delivery_staff.delivery_location if order.delivery_staff else None
+
     return {
         "id": order.id,
         "customer_id": order.customer_id,
@@ -89,4 +92,7 @@ def format_order_response(order: Order) -> dict:
         "customer_name": order.customer.name if order.customer else None,
         "restaurant_name": order.restaurant.name if order.restaurant else None,
         "delivery_staff_name": order.delivery_staff.name if order.delivery_staff else None,
+        "delivery_staff_latitude": delivery_location.latitude if delivery_location else None,
+        "delivery_staff_longitude": delivery_location.longitude if delivery_location else None,
+        "delivery_staff_location_updated_at": delivery_location.updated_at if delivery_location else None,
     }
