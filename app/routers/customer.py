@@ -78,7 +78,7 @@ def place_order(
     db.commit()
     db.refresh(current_user)
 
-    # Notify delivery staff about new order
+    # Notify zone manager about new order
     notify_new_order(order.id, restaurant.name, restaurant.zone_id)
 
     return format_order_response(order)
