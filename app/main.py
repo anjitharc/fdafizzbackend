@@ -22,6 +22,28 @@ def ensure_zone_status_column():
 
 ensure_zone_status_column()
 
+
+def ensure_food_item_extra_columns():
+    """Add new menu item fields for existing databases where create_all cannot alter tables."""
+    inspector = inspect(engine)
+    if "food_items" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("food_items")}
+    statements = []
+    if "category" not in columns:
+        statements.append("ALTER TABLE food_items ADD COLUMN category VARCHAR(100) NULL")
+    if "discount_percent" not in columns:
+        statements.append("ALTER TABLE food_items ADD COLUMN discount_percent FLOAT DEFAULT 0")
+    if "preparation_time" not in columns:
+        statements.append("ALTER TABLE food_items ADD COLUMN preparation_time INTEGER NULL")
+    if statements:
+        with engine.begin() as conn:
+            for statement in statements:
+                conn.execute(text(statement))
+
+
+ensure_food_item_extra_columns()
+
 app = FastAPI(
     title="Food Delivery App API",
     description="Backend API for Food Delivery Application",

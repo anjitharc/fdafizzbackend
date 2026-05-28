@@ -188,8 +188,11 @@ def remove_restaurant_image(
 def create_food_item(
     restaurant_id: int,
     name: str = Form(...),
+    category: Optional[str] = Form(None),
     description: Optional[str] = Form(None),
     price: float = Form(...),
+    discount_percent: float = Form(0.0),
+    preparation_time: Optional[int] = Form(None),
     is_available: bool = Form(True),
     image: Optional[UploadFile] = File(None),
     current_user: User = Depends(require_role(["master_admin"])),
@@ -207,8 +210,11 @@ def create_food_item(
     food_item = FoodItem(
         restaurant_id=restaurant_id,
         name=name,
+        category=category,
         description=description,
         price=price,
+        discount_percent=discount_percent,
+        preparation_time=preparation_time,
         image_url=image_url,
         is_available=is_available,
     )
@@ -231,7 +237,14 @@ def list_food_items(
 @router.put("/food-items/{food_item_id}", response_model=FoodItemResponse)
 def update_food_item(
     food_item_id: int,
-    data: FoodItemUpdate,
+    name: Optional[str] = Form(None),
+    category: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    price: Optional[float] = Form(None),
+    discount_percent: Optional[float] = Form(None),
+    preparation_time: Optional[int] = Form(None),
+    is_available: Optional[bool] = Form(None),
+    image: Optional[UploadFile] = File(None),
     current_user: User = Depends(require_role(["master_admin"])),
     db: Session = Depends(get_db),
 ):
@@ -240,9 +253,27 @@ def update_food_item(
     if not food_item:
         raise HTTPException(status_code=404, detail="Food item not found")
 
-    update_data = data.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(food_item, field, value)
+    if name is not None:
+        food_item.name = name
+    if category is not None:
+        food_item.category = category
+    if description is not None:
+        food_item.description = description
+    if price is not None:
+        food_item.price = price
+    if discount_percent is not None:
+        food_item.discount_percent = discount_percent
+    if preparation_time is not None:
+        food_item.preparation_time = preparation_time
+    if is_available is not None:
+        food_item.is_available = is_available
+    if image:
+        try:
+            if food_item.image_url:
+                delete_image(food_item.image_url)
+            food_item.image_url = upload_image(image)
+        except Exception as e:
+            print(f"Image upload failed: {e}")
 
     db.commit()
     db.refresh(food_item)
