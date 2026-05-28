@@ -9,7 +9,7 @@ from typing import Optional
 from app.database import SessionLocal
 from app.models.order import Order
 from app.models.user import User, UserRole
-from app.services.otp_service import send_via_whatsapp
+from app.services.otp_service import format_whatsapp_phone, send_via_whatsapp
 
 
 WHATSAPP_HEADER = "FIZZ Delivery"
@@ -20,7 +20,9 @@ def _send_whatsapp(phone: Optional[str], message: str) -> bool:
         print("[NOTIFICATION] WhatsApp skipped: recipient phone missing")
         return False
     try:
-        return send_via_whatsapp(phone=phone, message=message, header=WHATSAPP_HEADER)
+        formatted_phone = format_whatsapp_phone(phone)
+        print(f"[NOTIFICATION] Sending WhatsApp to {formatted_phone}")
+        return send_via_whatsapp(phone=formatted_phone, message=message, header=WHATSAPP_HEADER)
     except Exception as e:
         print(f"[NOTIFICATION] WhatsApp send failed for {phone}: {e}")
         return False

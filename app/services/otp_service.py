@@ -27,7 +27,7 @@ def _load_whatsapp_settings():
         return None
 
 
-def _format_whatsapp_phone(phone: str) -> str:
+def format_whatsapp_phone(phone: str) -> str:
     """Format phone number for WhatsApp API using India country code."""
     digits = ''.join(ch for ch in phone if ch.isdigit())
     if digits.startswith('91'):
@@ -49,7 +49,7 @@ def send_via_whatsapp(phone: str, message: str, header: str = "FIZZ Delivery") -
         print(f"[OTP] WhatsApp not configured — message not sent to {phone}")
         return False
 
-    formatted_phone = _format_whatsapp_phone(phone)
+    formatted_phone = format_whatsapp_phone(phone)
     payload = {
         "session_id": wa.session_id,
         "phone": formatted_phone,
@@ -64,7 +64,7 @@ def send_via_whatsapp(phone: str, message: str, header: str = "FIZZ Delivery") -
     try:
         resp = requests.post(WHATSAPP_API_URL, json=payload, headers=headers, timeout=10)
         if resp.status_code == 200:
-            print(f"[OTP] WhatsApp message sent to {phone}")
+            print(f"[OTP] WhatsApp message sent to {formatted_phone}")
             return True
         else:
             print(f"[OTP] WhatsApp API error {resp.status_code}: {resp.text}")
